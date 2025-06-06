@@ -1,4 +1,4 @@
-# Note: All implementation code of the `cottontail` tool and scripts for reproducing the experiments will be released upon acceptance.
+# Note: All implementation code of the `cottontail` tool and scripts for reproducing the experiments will be officially released upon acceptance. Thanks.
 
 # Cottontail Artifact
 
