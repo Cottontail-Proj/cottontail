@@ -74,15 +74,15 @@ To run the Docker container with your OpenAI API key and get an interactive bash
 docker run -it -e cottontail:latest bash
 ```
 
-Replace the `YOUR_OPENAI_API_KEY_HERE` with your key in the `config.ini` file and is ready to go:
+Replace the `YOUR_OPENAI_API_KEY_HERE` with your key in the `config.ini` file, and it is ready to go:) :
 
 ```
 python3 run-cottontail.py
 ```
 
-After a few minutes, you will see the similar expected output mentioned below in [5. Launch Concolic Testing](#5-launch-concolic-testing).
+After a few minutes, you will see the similar expected outputs mentioned below in [5. Launch Concolic Testing](#5-launch-concolic-testing).
 
-### Approach 2: Run in Native Enviroment
+### Approach 2: Run in Native Environment
 
 #### 0. System Requirements
 
