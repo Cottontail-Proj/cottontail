@@ -1,0 +1,69 @@
+
+
+                                    Testing
+
+
+The short version:
+
+$ ninja check
+
+
+The slightly longer version:
+
+We use the LLVM tools "lit" and "FileCheck", integrated with CMake. Since there
+is little documentation on setting up the combination of those tools (apart from
+the LLVM source code), here is an overview of the setup:
+
+1. Tests are C or C++ source files in the "test" subdirectory of the project.
+   They contain instructions for FileCheck in comments; see that tool's
+   documentation.
+
+2. We run the individual tests through lit, LLVM's configurable test runner. It
+   finds each test file, performs some variable substitutions (see below), and
+   runs the tests. The main source of configuration is "test/lit.cfg".
+
+3. At configuration time, CMake creates an additional config file for lit,
+   containing site-specific configuration such as the output directory of the
+   build. The template is "test/lit.site.cfg.in".
+
+4. CMake adds the "check" target, which invokes lit on the test suite. (It would
+   be nice to call the target "test", but this is a reserved name in some
+   versions of CMake, and the built-in test mechanism that it is reserved for
+   doesn't track dependencies the way we need.)
+
+Test files can use the following patterns:
+
+%s             The test file itself.
+%t             A temporary file.
+%symcc         Invocation of clang with our custom pass loaded.
+%filecheck     Invocation of FileCheck with the right arguments for the backend.
+
+Since we support multiple symbolic backends, the tests must account for
+different output from different backends. To this end, we rely on FileCheck's
+prefix mechanism: test files use different prefixes to specify requirements on
+different backends. The following prefixes are supported:
+
+SIMPLE:   Active when we test with our own backend.
+QSYM:     Active when we test with the QSYM backend.
+ANY:      Always active.
+
+The build system makes sure that "%filecheck" always expands to an invocation of
+FileCheck that activates the right prefixes for the current build configuration.
+
+Note that we run the tests only with the backend selected at configuration time,
+so a full test requires building the project in multiple configurations. Also,
+be aware that the backends write all log messages to standard error; therefore,
+checks should not depend on the relative ordering of backend logs and messages
+that the test program writes to standard output (use stderr instead).
+
+
+                                Regression tests
+
+In addition to the hand-written tests that exercise compiler functionality via C
+code, we have a directory "test/regression" where we can collect LLVM bitcode
+files that triggered bugs in real SymCC use. Generate the bitcode by running the
+crashing compiler command with additional arguments "-emit-llvm -S -o-", pipe
+the result through "opt -S -instnamer", and add a comment at the top to tell lit
+how to compile it. The instruction naming is necessary because different LLVM
+versions treat numbered (i.e., unnamed) instructions differently and may
+complain if the numbering sequence doesn't match expectations.

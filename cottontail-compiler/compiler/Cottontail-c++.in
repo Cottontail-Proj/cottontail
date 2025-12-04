@@ -1,0 +1,65 @@
+#!/bin/bash
+
+# This file is part of Cottontail.
+#
+# Cottontail is free software: you can redistribute it and/or modify it under the
+# terms of the GNU General Public License as published by the Free Software
+# Foundation, either version 3 of the License, or (at your option) any later
+# version.
+#
+# Cottontail is distributed in the hope that it will be useful, but WITHOUT ANY
+# WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR
+# A PARTICULAR PURPOSE. See the GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# Cottontail. If not, see <https://www.gnu.org/licenses/>.
+
+runtime_64bit_dir="${Cottontail_RUNTIME_DIR:-@Cottontail_RUNTIME_DIR@}"
+runtime_32bit_dir="${Cottontail_RUNTIME32_DIR:-@Cottontail_RUNTIME_32BIT_DIR@}"
+pass="${Cottontail_PASS_DIR:-@CMAKE_CURRENT_BINARY_DIR@}/libCottontail.so"
+libcxx_var=Cottontail_LIBCXX_PATH
+compiler="${Cottontail_CLANGPP:-@CLANGPP_BINARY@}"
+
+# Find out if we're cross-compiling for a 32-bit architecture
+runtime_dir="$runtime_64bit_dir"
+for arg in "$@"; do
+    if [[ $arg == "-m32" ]]; then
+        if [ -z "$runtime_32bit_dir" ]; then
+            echo "Cottontail: 32-bit compilation requested but Cottontail was not built with TARGET_32BIT=ON" >&2
+            exit 255
+        else
+            runtime_dir="$runtime_32bit_dir"
+            libcxx_var=Cottontail_LIBCXX_32BIT_PATH
+            break
+        fi
+    fi
+done
+
+if [[ -v Cottontail_REGULAR_LIBCXX ]]; then
+    stdlib_cflags=
+    stdlib_ldflags=
+elif [[ ! -v $libcxx_var ]]; then
+    >&2 echo "Please set $libcxx_var to the directory containing libc++ or confirm usage of the system library by setting Cottontail_REGULAR_LIBCXX!"
+    exit 255
+else
+    # It is important that the resulting binaries load libstdc++ before libc++;
+    # otherwise our backend calls the instrumented library in cases where
+    # exported names collide.
+    stdlib_cflags="-isystem ${!libcxx_var}/include/c++/v1 -nostdlib++"
+    stdlib_ldflags="-L${!libcxx_var}/lib -Wl,-rpath,${!libcxx_var}/lib -lstdc++ -lc++ -stdlib=libc++"
+fi
+
+if [ $# -eq 0 ]; then
+    echo "Use sym++ as a drop-in replacement for clang++, e.g., sym++ -O2 -o foo foo.cpp" >&2
+    exit 1
+fi
+
+exec $compiler                                  \
+     @CLANG_LOAD_PASS@"$pass"                   \
+     $stdlib_cflags                             \
+     "$@"                                       \
+     $stdlib_ldflags                            \
+     -L"$runtime_dir"                           \
+     -lCottontail-rt -g -O0 -fno-discard-value-names                         \
+     -Wl,-rpath,"$runtime_dir"                  \
+     -Qunused-arguments

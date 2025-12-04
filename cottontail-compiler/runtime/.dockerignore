@@ -1,0 +1,11 @@
+# Ignore the third-party software that's shipped with Qsym; we don't use it anyway.
+qsym_backend/qsym/third_party
+
+# Similarly, we don't run its tests.
+qsym_backend/qsym/tests
+
+# Some build utilities that we can ignore
+compile_commands.json
+
+# The Dockerfile itself doesn't need to be copied
+Dockerfile

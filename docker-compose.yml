@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  cottontail:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cottontail:latest
+    container_name: cottontail-fuzzer
+    environment:
+      # Replace with your actual OpenAI API key
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+    volumes:
+      # the output directories to host for easy access to results
+      - ./benchmark-test/output:/cottontail/benchmark-test/output
+      - ./benchmark-test/failed-cases:/cottontail/benchmark-test/failed-cases
+      - ./benchmark-test/gpt-output:/cottontail/benchmark-test/gpt-output
+      - ./benchmark-test/z3-output:/cottontail/benchmark-test/z3-output
+      # logs (run-cottontail.py is executed from /cottontail/benchmark-test)
+      - ./run_cottontail_log.txt:/cottontail/benchmark-test/run_cottontail_log.txt
