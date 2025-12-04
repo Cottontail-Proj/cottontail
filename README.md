@@ -71,7 +71,7 @@ docker build -t cottontail:latest .
 To run the Docker container with your OpenAI API key and get an interactive bash shell (for debugging or manual commands):
 
 ```bash
-docker run -it -e cottontail:latest bash
+docker run -it cottontail:latest bash
 ```
 
 Replace the `YOUR_OPENAI_API_KEY_HERE` with your key in the `config.ini` file, and it is ready to go:) :
